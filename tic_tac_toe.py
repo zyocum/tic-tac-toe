@@ -2,7 +2,7 @@
 
 """Run a game of Tic-Tac-Toe with curses"""
 
-import curses
+import curses, curses.ascii
 import numpy as np
 
 UP = ord('k'), ord('K'), curses.KEY_UP
@@ -14,7 +14,7 @@ X = ord('x'), ord('X')
 O = ord('o'), ord('O')
 
 CLEAR = ord('c'), ord('C'),
-DELETE = ord('~'), ord('\x7f'), curses.KEY_BACKSPACE, curses.KEY_DC
+DELETE = ord('~'), curses.ascii.DEL, curses.KEY_BACKSPACE, curses.KEY_DC
 QUIT = ord('q'), ord('Q')
 
 BOARD = (
@@ -28,6 +28,7 @@ BOARD = (
 )
 
 def new_game():
+    """Return a blank game state"""
     return np.array([[None] * 3] * 3)
 
 def winner(game):
@@ -54,22 +55,25 @@ def cell(y, x):
     return y // 2, x // 2
 
 def key(value):
-    """Get the firt character from the key binding integer values"""
+    """Get the firt character from the key binding integer values
+    
+    value: a key binding tuple (UP, DOWN, X, O, QUIT, etc.)"""
     key, *_ = value
     return chr(key)
 
 def run(game, debug=False):
     """Start a game in a curses window
     
-    game: the current state as a 3x3 numpy array
+    game: the current game state as a 3x3 numpy array
+    debug: show debug info if set to True
     """
     if not isinstance(game, np.ndarray) or game.shape != (3, 3):
         raise ValueError('invalid game state (must be a 3x3 numpy.array)')
     # set up curses window
     window = curses.initscr()
+    window.clear()
     window.keypad(True)
     curses.noecho()
-    window.erase()
     try:
         y, x = 1, 1 # start cursor in the upper left cell
         value = None
@@ -122,3 +126,4 @@ def run(game, debug=False):
 
 if __name__ == '__main__':
     run(new_game())
+
