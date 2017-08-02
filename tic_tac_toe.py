@@ -5,17 +5,17 @@
 import curses
 import numpy as np
 
-UP = 'K'
-DOWN = 'J'
-RIGHT = 'L'
-LEFT = 'H'
+UP = ord('k'), ord('K'), curses.KEY_UP
+DOWN = ord('j'), ord('J'), curses.KEY_DOWN
+RIGHT = ord('l'), ord('L'), curses.KEY_RIGHT
+LEFT = ord('h'), ord('H'), curses.KEY_LEFT
 
-X = 'X'
-O = 'O'
+X = ord('x'), ord('X')
+O = ord('o'), ord('O')
 
-CLEAR = 'C'
-DELETE = ('~', '\x7f')
-QUIT = 'Q'
+CLEAR = ord('c'), ord('C'),
+DELETE = ord('~'), ord('\x7f'), curses.KEY_BACKSPACE, curses.KEY_DC
+QUIT = ord('q'), ord('Q')
 
 BOARD = (
     '┌─┬─┬─┐\n'
@@ -32,7 +32,7 @@ def new_game():
 
 def winner(game):
     """Determine if there is a winner and if so return the winning symbol"""
-    for player in X, O:
+    for player in chr(X[-1]), chr(O[-1]):
         if any((
             # check diagonals
             set(game.diagonal()) == {player},
@@ -53,6 +53,11 @@ def cell(y, x):
     """
     return y // 2, x // 2
 
+def key(value):
+    """Get the firt character from the key binding integer values"""
+    key, *_ = value
+    return chr(key)
+
 def run(game, debug=False):
     """Start a game in a curses window
     
@@ -62,22 +67,25 @@ def run(game, debug=False):
         raise ValueError('invalid game state (must be a 3x3 numpy.array)')
     # set up curses window
     window = curses.initscr()
+    window.keypad(True)
     curses.noecho()
     window.erase()
     try:
         y, x = 1, 1 # start cursor in the upper left cell
         value = None
         # loop until the user quits
-        while not value == QUIT:
+        while not value in QUIT:
             board = BOARD.format(*((v or ' ') for v in game.flatten()))
             window.addstr(0, 0, board)
             message = (
-                f'{LEFT}:left {RIGHT}:right {UP}:up {DOWN}:down\n'
-                f'{X}:"X" {O}:"O" ⌫:delete {CLEAR}:clear\n'
-                f'{QUIT}:quit'
+                f'{key(LEFT)}:left {key(RIGHT)}:right {key(UP)}:up '
+                f'{key(DOWN)}:down '
+                f'{key(X)}:"X" {key(O)}:"O" {key(DELETE)}:delete '
+                f'{key(CLEAR)}:clear '
+                f'{key(QUIT)}:quit'
             )
             window.addstr(9, 0, message)
-            value, *_ = window.getkey(y, x).upper()
+            value = window.getch(y, x)
             # check for relevant input
             if value in UP:
                 y = max(1, y - 2)
@@ -88,9 +96,9 @@ def run(game, debug=False):
             elif value in LEFT:
                 x = max(1, x - 2)
             elif value in X:
-                game[cell(y, x)] = X
+                game[cell(y, x)] = chr(X[-1])
             elif value in O:
-                game[cell(y, x)] = O
+                game[cell(y, x)] = chr(O[-1])
             elif value in DELETE:
                 game[cell(y, x)] = None
             elif value in CLEAR:
@@ -98,11 +106,12 @@ def run(game, debug=False):
             else:
                 curses.flash()
             player = winner(game)
+            # show game status
             if player:
                 window.addstr(7, 0, f'{player} wins!')
             elif np.all(game != None): # draw game
                 window.addstr(7, 0, "Draw!  ")
-            else:
+            else: # clobber the status
                 window.addstr(7, 0, ' ' * 7)
             if debug:
                 window.addstr(13, 0, f'value: {value} ')
