@@ -2,7 +2,8 @@
 
 """Run a game of Tic-Tac-Toe with curses"""
 
-import curses, curses.ascii
+import curses
+import curses.ascii
 import numpy as np
 
 UP = ord('k'), ord('K'), curses.KEY_UP
@@ -27,9 +28,11 @@ BOARD = (
     '└─┴─┴─┘\n'
 )
 
+
 def new_game():
     """Return a blank game state"""
     return np.array([[None] * 3] * 3)
+
 
 def winner(game):
     """Determine if there is a winner and if so return the winning symbol"""
@@ -45,25 +48,28 @@ def winner(game):
         )):
             return player
 
+
 def cell(y, x):
     """Derive the appropriate game state cell from curses window y, x
     coordinates by correcting for the board offsets
-    
+
     y: y position in the curses window
     x: x position in the curses window
     """
     return y // 2, x // 2
 
+
 def key(value):
     """Get the firt character from the key binding integer values
-    
+
     value: a key binding tuple (UP, DOWN, X, O, QUIT, etc.)"""
     key, *_ = value
     return chr(key)
 
+
 def run(game, debug=False):
     """Start a game in a curses window
-    
+
     game: the current game state as a 3x3 numpy array
     debug: show debug info if set to True
     """
@@ -75,7 +81,7 @@ def run(game, debug=False):
     window.keypad(True)
     curses.noecho()
     try:
-        y, x = 1, 1 # start cursor in the upper left cell
+        y, x = 1, 1  # start cursor in the upper left cell
         value = None
         # loop until the user quits
         while not value in QUIT:
@@ -113,9 +119,9 @@ def run(game, debug=False):
             # show game status
             if player:
                 window.addstr(7, 0, f'{player} wins!')
-            elif np.all(game != None): # draw game
+            elif np.all(game != None):  # draw game
                 window.addstr(7, 0, "Draw!  ")
-            else: # clobber the status
+            else:  # clobber the status
                 window.addstr(7, 0, ' ' * 7)
             if debug:
                 window.addstr(13, 0, f'value: {value} ')
@@ -124,6 +130,6 @@ def run(game, debug=False):
     finally:
         curses.endwin()
 
+
 if __name__ == '__main__':
     run(new_game())
-
